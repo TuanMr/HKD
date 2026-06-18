@@ -382,25 +382,25 @@
       <div class="kpi-grid">
         <div class="kpi-card kpi-blue">
           <div class="kpi-label">Doanh thu hôm nay</div>
-          <div class="kpi-value">12.500.000 ₫</div>
+          <div class="kpi-value" id="kpi-doanh-thu">—</div>
           <div class="kpi-sub">↑ 3 đơn bán</div>
           <div class="kpi-icon">💵</div>
         </div>
         <div class="kpi-card kpi-green">
           <div class="kpi-label">Công nợ phải thu</div>
-          <div class="kpi-value text-green">45.200.000 ₫</div>
+          <div class="kpi-value text-green" id="kpi-cn-thu">—</div>
           <div class="kpi-sub">5 khách hàng</div>
           <div class="kpi-icon">📥</div>
         </div>
         <div class="kpi-card kpi-red">
           <div class="kpi-label">Công nợ phải trả</div>
-          <div class="kpi-value text-red">28.800.000 ₫</div>
+          <div class="kpi-value text-red" id="kpi-cn-tra">—</div>
           <div class="kpi-sub">3 nhà cung cấp</div>
           <div class="kpi-icon">📤</div>
         </div>
         <div class="kpi-card kpi-yellow">
           <div class="kpi-label">Hàng tồn kho thấp</div>
-          <div class="kpi-value text-yellow">2 mặt hàng</div>
+          <div class="kpi-value text-yellow" id="kpi-hang-sap-het">—</div>
           <div class="kpi-sub">Dưới mức tối thiểu</div>
           <div class="kpi-icon">⚠️</div>
         </div>
@@ -1130,20 +1130,20 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Khách hàng</label>
-          <select class="form-control">
-            <option>-- Chọn khách hàng --</option>
-            <option>KH001 - Nguyễn Văn An</option>
-            <option>KH002 - Trần Thị Bình</option>
-            <option>KH003 - Công ty ABC</option>
+          <select class="form-control" id="don-ban-khach">
+            <option value="">-- Chọn khách hàng --</option>
+            <option value="KH001">KH001 - Nguyễn Văn An</option>
+            <option value="KH002">KH002 - Trần Thị Bình</option>
+            <option value="KH003">KH003 - Công ty ABC</option>
           </select>
         </div>
         <div class="form-group">
           <label>Ngày bán</label>
-          <input type="date" class="form-control" value="2026-06-18">
+          <input type="date" class="form-control" id="don-ban-ngay">
         </div>
         <div class="form-group">
           <label>Hạn thanh toán</label>
-          <input type="date" class="form-control">
+          <input type="date" class="form-control" id="don-ban-han-tt">
         </div>
         <div class="form-group">
           <label>Hình thức TT</label>
@@ -1183,7 +1183,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-tao-don-ban')">Hủy</button>
-      <button class="btn btn-primary">💾 Lưu đơn hàng</button>
+      <button class="btn btn-primary" onclick="submitDonBanForm()">💾 Lưu đơn hàng</button>
     </div>
   </div>
 </div>
@@ -1235,7 +1235,7 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Ngày</label>
-          <input type="date" class="form-control" value="2026-06-18">
+          <input type="date" class="form-control" id="thu-chi-ngay">
         </div>
         <div class="form-group">
           <label>Đối tượng</label>
@@ -1272,7 +1272,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-tao-thu-chi')">Hủy</button>
-      <button class="btn btn-primary">💾 Lưu phiếu</button>
+      <button class="btn btn-primary" id="thu-chi-submit-btn" onclick="submitThuChiForm()">💾 Lưu phiếu</button>
     </div>
   </div>
 </div>
@@ -1820,7 +1820,7 @@
   //  CẤU HÌNH API
   //  Sau khi deploy Apps Script, paste URL vào đây:
   // ============================================================
-  const API_URL = 'https://script.google.com/macros/s/AKfycbzR0QZ1xWVDUDg06NbhbN9NcEpXSq4n_3BONHrkOHLAXoX_BP9uJCF4Uw0RBtRTsDUD/exec'; // VD: 'https://script.google.com/macros/s/AKfyc.../exec'
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzR0QZ1xWVDUDg06NbhbN9NcEpXSq4n_3BONHrkOHLAXoX_BP9uJCF4Uw0RBtRTsDUD/exec';
 
   // ===== API HELPERS =====
   async function apiGet(params) {
@@ -1931,7 +1931,7 @@
   function renderDashboard(d) {
     const setKPI = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
     setKPI('kpi-doanh-thu', Number(d.doanhThuHomNay||0).toLocaleString('vi-VN')+'₫');
-    setKPI('kpi-don-ban',   d.donBanHomNay || 0);
+    setKPI('kpi-hang-sap-het', d.hangSapHet || d.donBanHomNay || 0);
     setKPI('kpi-cn-thu',    Number(d.congNoPhuThu||0).toLocaleString('vi-VN')+'₫');
     setKPI('kpi-cn-tra',    Number(d.congNoPhuTra||0).toLocaleString('vi-VN')+'₫');
   }
@@ -2748,8 +2748,63 @@
     showToast('✅ Đã lưu tên cửa hàng: ' + val);
   }
 
-  // Khởi động
+  // ===== SUBMIT FORM ĐƠN BÁN =====
+  // ===== SUBMIT FORM ĐƠN BÁN =====
+  function submitDonBanForm() {
+    const khach   = (document.getElementById('don-ban-khach')?.value || '').trim();
+    const ngay    = document.getElementById('don-ban-ngay')?.value || '';
+    const hanTT   = document.getElementById('don-ban-han-tt')?.value || '';
+    if (!khach) { showToast('Vui lòng chọn khách hàng!', 'error'); return; }
+    const rows = [];
+    document.querySelectorAll('#don-ban-items-body tr').forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      if (cells.length >= 4) {
+        rows.push({
+          maHH  : cells[0].querySelector('select,input')?.value || '',
+          soLuong: Number(cells[1].querySelector('input')?.value || 0),
+          donGia : Number(cells[2].querySelector('input')?.value || 0),
+          ghiChu : cells[3].querySelector('input')?.value || '',
+        });
+      }
+    });
+    if (!rows.length) { showToast('Vui lòng thêm ít nhất 1 sản phẩm!', 'error'); return; }
+    const formData = { khachHang: khach, ngayBan: ngay, hanThanhToan: hanTT, sanPham: rows };
+    submitDonBan(formData);
+  }
+
+  // ===== SUBMIT FORM THU / CHI =====
+  let _thuChiLoai = 'thu';
+  const _origOpenThuChi = window.openThuChi || function(){};
+  window.openThuChi = function(type) {
+    _thuChiLoai = type;
+    if (typeof _origOpenThuChi === 'function') _origOpenThuChi(type);
+  };
+
+  function submitThuChiForm() {
+    const ngay   = document.getElementById('thu-chi-ngay')?.value || '';
+    const soTien = Number(document.getElementById('thu-chi-so-tien')?.value || 0);
+    const ghiChu = (document.getElementById('thu-chi-ghi-chu')?.value || '').trim();
+    if (!soTien) { showToast('Vui lòng nhập số tiền!', 'error'); return; }
+    if (_thuChiLoai === 'thu') {
+      submitPhieuThu({ ngayThu: ngay, soTien, ghiChu });
+    } else {
+      submitPhieuChi({ ngayChi: ngay, soTien, ghiChu });
+    }
+  }
+
+  // ===== KHỞI ĐỘNG =====
   loadShopName();
+  (function setTodayDefaults() {
+    const today = new Date();
+    const _todayVal = today.getFullYear() + '-' +
+      String(today.getMonth()+1).padStart(2,'0') + '-' +
+      String(today.getDate()).padStart(2,'0');
+    ['don-ban-ngay','thu-chi-ngay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = _todayVal;
+    });
+  })();
+  loadPageData('dashboard');
 
 </script>
 </body>
