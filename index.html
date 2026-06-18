@@ -434,12 +434,7 @@
           <div class="table-wrapper">
             <table>
               <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead>
-              <tbody>
-                <tr><td class="fw-600">#DH0023</td><td>Nguyễn Văn An</td><td class="text-right fw-600">4.500.000 ₫</td><td><span class="badge badge-yellow">Còn nợ</span></td></tr>
-                <tr><td class="fw-600">#DH0022</td><td>Trần Thị Bình</td><td class="text-right fw-600">2.200.000 ₫</td><td><span class="badge badge-green">Đã TT</span></td></tr>
-                <tr><td class="fw-600">#DH0021</td><td>Công ty ABC</td><td class="text-right fw-600">12.800.000 ₫</td><td><span class="badge badge-yellow">Còn nợ</span></td></tr>
-                <tr><td class="fw-600">#DH0020</td><td>Lê Văn Cường</td><td class="text-right fw-600">1.800.000 ₫</td><td><span class="badge badge-green">Đã TT</span></td></tr>
-              </tbody>
+              <tbody id="tbody-db-don-hang"><tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:16px">Đang tải...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -450,23 +445,7 @@
           <div class="table-wrapper">
             <table>
               <thead><tr><th>Khách hàng</th><th>Số nợ</th><th>Hạn</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td>Nguyễn Văn An</td>
-                  <td class="fw-600 text-danger">4.500.000 ₫</td>
-                  <td><span class="badge badge-red">2 ngày</span></td>
-                </tr>
-                <tr>
-                  <td>Công ty ABC</td>
-                  <td class="fw-600 text-warning">12.800.000 ₫</td>
-                  <td><span class="badge badge-yellow">5 ngày</span></td>
-                </tr>
-                <tr>
-                  <td>Phạm Thị Dung</td>
-                  <td class="fw-600 text-warning">8.000.000 ₫</td>
-                  <td><span class="badge badge-yellow">7 ngày</span></td>
-                </tr>
-              </tbody>
+              <tbody id="tbody-db-cong-no"><tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:16px">Đang tải...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1147,7 +1126,7 @@
         </div>
         <div class="form-group">
           <label>Hình thức TT</label>
-          <select class="form-control">
+          <select class="form-control" id="don-ban-httt">
             <option>Tiền mặt</option>
             <option>Chuyển khoản</option>
             <option>Công nợ</option>
@@ -1177,7 +1156,7 @@
         </div>
         <div class="form-group form-full">
           <label>Ghi chú</label>
-          <input class="form-control" type="text" placeholder="Ghi chú đơn hàng...">
+          <input class="form-control" type="text" id="don-ban-ghi-chu" placeholder="Ghi chú đơn hàng...">
         </div>
       </div>
     </div>
@@ -1247,7 +1226,7 @@
         </div>
         <div class="form-group">
           <label>Số tiền (₫)</label>
-          <input type="number" class="form-control" placeholder="0">
+          <input type="number" class="form-control" id="thu-chi-so-tien" placeholder="0">
         </div>
         <div class="form-group">
           <label>Hình thức</label>
@@ -1266,7 +1245,7 @@
         </div>
         <div class="form-group form-full">
           <label>Ghi chú</label>
-          <input class="form-control" type="text" placeholder="Ghi chú...">
+          <input class="form-control" type="text" id="thu-chi-ghi-chu" placeholder="Ghi chú...">
         </div>
       </div>
     </div>
@@ -1494,7 +1473,7 @@
         </div>
         <div class="form-group">
           <label>Hình thức TT</label>
-          <select class="form-control">
+          <select class="form-control" id="don-ban-httt">
             <option>Tiền mặt</option><option>Chuyển khoản</option><option>Công nợ</option>
           </select>
         </div>
@@ -1869,58 +1848,62 @@
   }
 
   // ============================================================
-  //  LOAD DATA THỰC TỪ API (thay mock data khi API_URL được điền)
+  //  LOAD DATA THỰC TỪ API
   // ============================================================
   async function loadPageData(page) {
-    if (!API_URL) return; // dùng mock data khi chưa có API
+    if (!API_URL) return;
 
     if (page === 'dashboard') {
-      const d = await apiGet({ action: 'dashboard' });
-      if (d) renderDashboard(d);
+      const [d, donBanRows, cnThu] = await Promise.all([
+        apiGet({ action: 'dashboard' }),
+        apiGet({ sheet: 'DonBan' }),
+        apiGet({ sheet: 'CongNoPhuThu' }),
+      ]);
+      renderDashboard(d || {}, donBanRows || [], cnThu || []);
     }
     if (page === 'ban-hang') {
       const rows = await apiGet({ sheet: 'DonBan' });
-      if (rows) renderTableBanHang(rows);
+      renderTableBanHang(rows || []);
     }
     if (page === 'mua-hang') {
       const rows = await apiGet({ sheet: 'DonMua' });
-      if (rows) renderTableMuaHang(rows);
+      renderTableMuaHang(rows || []);
     }
     if (page === 'thu-chi') {
       const [thu, chi] = await Promise.all([
         apiGet({ sheet: 'PhieuThu' }),
         apiGet({ sheet: 'PhieuChi' }),
       ]);
-      if (thu) renderTablePhieuThu(thu);
-      if (chi) renderTablePhieuChi(chi);
+      renderTablePhieuThu(thu || []);
+      renderTablePhieuChi(chi || []);
     }
     if (page === 'cong-no') {
       const [phuThu, phuTra] = await Promise.all([
         apiGet({ sheet: 'CongNoPhuThu' }),
         apiGet({ sheet: 'CongNoPhuTra' }),
       ]);
-      if (phuThu) {
-        DATA_PHAI_THU.length = 0;
-        phuThu.forEach(r => DATA_PHAI_THU.push({
-          khach: r.TenKH, sdt: r.SDT,
-          tongNo: Number(r.TongNo), soDon: Number(r.SoDon),
-          han: r.HanGanNhat, mucDo: r.MucDo,
-        }));
-        document.getElementById('tbody-phai-thu').dataset.rendered = '';
-      }
-      if (phuTra) {
-        DATA_PHAI_TRA.length = 0;
-        phuTra.forEach(r => DATA_PHAI_TRA.push({
-          ncc: r.TenNCC, sdt: r.SDT,
-          tongNo: Number(r.TongNo), soDon: Number(r.SoDon),
-          han: r.HanTT, mucDo: r.MucDo,
-        }));
-        document.getElementById('tbody-phai-tra').dataset.rendered = '';
-      }
+      DATA_PHAI_THU.length = 0;
+      (phuThu || []).forEach(r => DATA_PHAI_THU.push({
+        khach: r.TenKH, sdt: r.SDT,
+        tongNo: Number(r.TongNo), soDon: Number(r.SoDon),
+        han: r.HanGanNhat, mucDo: r.MucDo,
+      }));
+      DATA_PHAI_TRA.length = 0;
+      (phuTra || []).forEach(r => DATA_PHAI_TRA.push({
+        ncc: r.TenNCC, sdt: r.SDT,
+        tongNo: Number(r.TongNo), soDon: Number(r.SoDon),
+        han: r.HanTT, mucDo: r.MucDo,
+      }));
+      // reset rendered flag to force re-render
+      const t1 = document.getElementById('tbody-phai-thu');
+      const t2 = document.getElementById('tbody-phai-tra');
+      if (t1) t1.dataset.rendered = '';
+      if (t2) t2.dataset.rendered = '';
+      renderCongNo();
     }
     if (page === 'ton-kho') {
       const rows = await apiGet({ sheet: 'TonKho' });
-      if (rows) renderTableTonKho(rows);
+      renderTableTonKho(rows || []);
     }
     if (page === 'danh-muc') {
       loadDanhMucData();
@@ -1928,12 +1911,51 @@
   }
 
   // ── Render helpers ──
-  function renderDashboard(d) {
+  function renderDashboard(d, donBanRows, cnThuRows) {
     const setKPI = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
-    setKPI('kpi-doanh-thu', Number(d.doanhThuHomNay||0).toLocaleString('vi-VN')+'₫');
-    setKPI('kpi-hang-sap-het', d.hangSapHet || d.donBanHomNay || 0);
-    setKPI('kpi-cn-thu',    Number(d.congNoPhuThu||0).toLocaleString('vi-VN')+'₫');
-    setKPI('kpi-cn-tra',    Number(d.congNoPhuTra||0).toLocaleString('vi-VN')+'₫');
+    setKPI('kpi-doanh-thu',   Number(d.doanhThuHomNay||0).toLocaleString('vi-VN')+'₫');
+    setKPI('kpi-hang-sap-het',Number(d.hangSapHet||0));
+    setKPI('kpi-cn-thu',      Number(d.congNoPhuThu||0).toLocaleString('vi-VN')+'₫');
+    setKPI('kpi-cn-tra',      Number(d.congNoPhuTra||0).toLocaleString('vi-VN')+'₫');
+
+    // Bảng "Đơn hàng gần đây" — 5 đơn mới nhất
+    const tDon = document.getElementById('tbody-db-don-hang');
+    if (tDon) {
+      const last5 = (donBanRows || []).slice(-5).reverse();
+      tDon.innerHTML = last5.length ? last5.map(r => `
+        <tr>
+          <td class="fw-600">${r.MaDon}</td>
+          <td>${r.TenKH||''}</td>
+          <td class="text-right fw-600">${Number(r.TongTien||0).toLocaleString('vi-VN')} ₫</td>
+          <td><span class="badge ${r.TrangThai==='Đã TT'?'badge-green':'badge-yellow'}">${r.TrangThai||''}</span></td>
+        </tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:16px">Chưa có đơn hàng</td></tr>';
+    }
+
+    // Bảng "Công nợ sắp đến hạn" — lấy từ cnThuRows, sort theo hạn gần nhất
+    const tCN = document.getElementById('tbody-db-cong-no');
+    if (tCN) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const upcoming = (cnThuRows || [])
+        .filter(r => r.TongNo > 0)
+        .map(r => {
+          const han = r.HanGanNhat ? new Date(r.HanGanNhat) : null;
+          const days = han ? Math.ceil((han - today) / 86400000) : 999;
+          return { ...r, days };
+        })
+        .sort((a,b) => a.days - b.days)
+        .slice(0, 5);
+      tCN.innerHTML = upcoming.length ? upcoming.map(r => {
+        const cls = r.days < 0 ? 'badge-danger' : r.days <= 3 ? 'badge-red' : r.days <= 7 ? 'badge-yellow' : 'badge-green';
+        const label = r.days < 0 ? `Quá ${-r.days} ngày` : r.days === 0 ? 'Hôm nay' : `${r.days} ngày`;
+        return `<tr>
+          <td>${r.TenKH||''}</td>
+          <td class="fw-600 text-danger">${Number(r.TongNo||0).toLocaleString('vi-VN')} ₫</td>
+          <td><span class="badge ${cls}">${label}</span></td>
+        </tr>`;
+      }).join('')
+        : '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:16px">Không có công nợ sắp đến hạn</td></tr>';
+    }
   }
 
   function renderTableBanHang(rows) {
@@ -2032,6 +2054,7 @@
     if (kh)  renderDanhMucKhachHang(kh);
     if (ncc) renderDanhMucNCC(ncc);
     if (tk)  renderDanhMucTaiKhoan(tk);
+    populateDropdowns(kh, hh); // cập nhật dropdown trong form
   }
 
   function renderDanhMucHangHoa(rows) {
@@ -2083,6 +2106,22 @@
           <button class="btn btn-ghost btn-sm" onclick="openModal('modal-them-tai-khoan-nh')">✏️</button>
         </td>
       </tr>`).join('');
+  }
+
+  // ── Populate form dropdowns from API data ──
+  function populateDropdowns(khachRows, hhRows) {
+    // Khách hàng dropdown in Đơn Bán modal
+    const selKH = document.getElementById('don-ban-khach');
+    if (selKH && khachRows && khachRows.length) {
+      selKH.innerHTML = '<option value="">-- Chọn khách hàng --</option>' +
+        khachRows.map(r => `<option value="${r.MaKH}">${r.MaKH} - ${r.TenKH}</option>`).join('');
+    }
+    // Sản phẩm dropdown in order-items-body (first row select)
+    if (hhRows && hhRows.length) {
+      const spOpts = '<option value="">-- Chọn SP --</option>' +
+        hhRows.map(r => `<option value="${r.MaHH}" data-dvt="${r.DonVi||''}" data-gia="${r.GiaBan||0}">${r.TenHH}</option>`).join('');
+      document.querySelectorAll('#order-items-body select').forEach(sel => { sel.innerHTML = spOpts; });
+    }
   }
 
   // ============================================================
@@ -2734,7 +2773,8 @@
   function loadShopName() {
     const saved = localStorage.getItem('shopName');
     if (saved) {
-      document.getElementById('sidebar-shop-name').textContent = saved;
+      const el = document.getElementById('sidebar-shop-name');
+      if (el) el.textContent = saved;
       const inp = document.getElementById('setup-shop-name');
       if (inp) inp.value = saved;
     }
@@ -2749,26 +2789,25 @@
   }
 
   // ===== SUBMIT FORM ĐƠN BÁN =====
-  // ===== SUBMIT FORM ĐƠN BÁN =====
   function submitDonBanForm() {
-    const khach   = (document.getElementById('don-ban-khach')?.value || '').trim();
-    const ngay    = document.getElementById('don-ban-ngay')?.value || '';
-    const hanTT   = document.getElementById('don-ban-han-tt')?.value || '';
+    const khach  = (document.getElementById('don-ban-khach')?.value || '').trim();
+    const ngay   = document.getElementById('don-ban-ngay')?.value || '';
+    const hanTT  = document.getElementById('don-ban-han-tt')?.value || '';
+    const httt   = document.getElementById('don-ban-httt')?.value || 'Tiền mặt';
+    const ghiChu = (document.getElementById('don-ban-ghi-chu')?.value || '').trim();
     if (!khach) { showToast('Vui lòng chọn khách hàng!', 'error'); return; }
     const rows = [];
-    document.querySelectorAll('#don-ban-items-body tr').forEach(tr => {
+    document.querySelectorAll('#order-items-body tr').forEach(tr => {
       const cells = tr.querySelectorAll('td');
       if (cells.length >= 4) {
-        rows.push({
-          maHH  : cells[0].querySelector('select,input')?.value || '',
-          soLuong: Number(cells[1].querySelector('input')?.value || 0),
-          donGia : Number(cells[2].querySelector('input')?.value || 0),
-          ghiChu : cells[3].querySelector('input')?.value || '',
-        });
+        const maHH    = cells[0].querySelector('select')?.value || '';
+        const soLuong = Number(cells[2].querySelector('input')?.value || 0);
+        const donGia  = Number(cells[3].querySelector('input')?.value || 0);
+        if (maHH && soLuong > 0) rows.push({ maHH, soLuong, donGia });
       }
     });
-    if (!rows.length) { showToast('Vui lòng thêm ít nhất 1 sản phẩm!', 'error'); return; }
-    const formData = { khachHang: khach, ngayBan: ngay, hanThanhToan: hanTT, sanPham: rows };
+    if (!rows.length) { showToast('Vui lòng chọn ít nhất 1 sản phẩm!', 'error'); return; }
+    const formData = { khachHang: khach, ngayBan: ngay, hanThanhToan: hanTT, hinhThucTT: httt, ghiChu, sanPham: rows };
     submitDonBan(formData);
   }
 
@@ -2805,6 +2844,13 @@
     });
   })();
   loadPageData('dashboard');
+  // Pre-load dropdowns ngay từ đầu
+  if (API_URL) {
+    Promise.all([
+      apiGet({ sheet: 'KhachHang' }),
+      apiGet({ sheet: 'HangHoa' }),
+    ]).then(([kh, hh]) => populateDropdowns(kh, hh));
+  }
 
 </script>
 </body>
